@@ -11,7 +11,7 @@ updates:
     labels:
       - "dependencies"
       - "maven"
-    # milestone: 26
+    milestone: 1
     commit-message:
       prefix: "deps"
       prefix-development: "deps-dev"

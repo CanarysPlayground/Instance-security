@@ -1,0 +1,5 @@
+name: hardcoded-credentials
+version: 0.0.1
+library: false
+dependencies:
+  codeql/java-all: "*"

@@ -37,7 +37,7 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         build-mode: autobuild  
-        queries: +security-and-quality  
+        queries: +security-and-quality,./.github/queries/hardcoded-credentials,./.github/queries/unsafe-logging
         # config-file: .github/codeql-config.yml
 
     - name: Build with Maven (if autobuild fails)

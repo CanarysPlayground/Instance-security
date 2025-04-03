@@ -1,0 +1,6 @@
+name: unsafe-logging
+version: 0.0.1
+library: false
+dependencies:
+  codeql/java-all: "*"
+  codeql/java-queries: "*"  # For data flow and framework-specific querie

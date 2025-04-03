@@ -8,8 +8,8 @@
  */
 
 import java
-import semmle.code.java.frameworks.Slf4j  // For SLF4J logging
-import semmle.code.java.dataflow.DataFlow
+import DataFlow::PathGraph  // For DataFlow::PathNode and data flow analysis
+import semmle.code.java.dataflow.DataFlow  // For DataFlow::Node
 
 // Define a sink as a logging method (e.g., SLF4J's logger.info)
 class LoggingSink extends DataFlow::Node {

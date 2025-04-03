@@ -1,7 +1,49 @@
 version: 2
 updates:
-- package-ecosystem: maven
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "11:16"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 5
+    target-branch: "main"
+    labels:
+      - "dependencies"
+      - "maven"
+    # milestone: 26
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    groups:
+      # Group minor and patch updates for all dependencies and plugins
+      minor-and-patch:
+        applies-to: version-updates
+        patterns:
+          - "*"  # Applies to all dependencies and plugins
+        update-types:
+          - "minor"
+          - "patch"
+        exclude-patterns:
+          - "junit:junit"  # Exclude JUnit for separate handling
+      # Group for JUnit updates
+      junit:
+        applies-to: version-updates
+        patterns:
+          - "junit:junit"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group for JaCoCo plugin updates
+      jacoco:
+        applies-to: version-updates
+        patterns:
+          - "org.jacoco:jacoco-maven-plugin"
+        update-types:
+          - "minor"
+          - "patch"
+    # Optional: Ignore major updates for all dependencies/plugins
+    # ignore:
+    #   - dependency-name: "*"
+    #     update-types: ["version-update:semver-major"]

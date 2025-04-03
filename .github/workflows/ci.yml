@@ -1,4 +1,4 @@
-name: Workflow for Codecov example-java-maven
+name: Workflow Maven
 on: [push, pull_request]
 jobs:
   run:

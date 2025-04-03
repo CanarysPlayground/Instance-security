@@ -43,6 +43,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
+
+      security-group:
+            applies-to: security-updates
+            patterns:
+              - "*"  # Applies to all dependencies/plugins for security fixes
+            update-types:
+              - "patch"  
+              - "minor"
     # Optional: Ignore major updates for all dependencies/plugins
     # ignore:
     #   - dependency-name: "*"

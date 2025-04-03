@@ -3,4 +3,4 @@ version: 0.0.1
 library: false
 dependencies:
   codeql/java-all: "*"
-  codeql/java-queries: "*"  # For data flow and framework-specific querie
+  codeql/java-queries: "*"  # Includes data flow and framework-specific queries

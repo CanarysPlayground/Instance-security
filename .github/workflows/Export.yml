@@ -1,0 +1,158 @@
+name: Export GHAS to Azure Sentinel and Datadog
+
+on:
+  # schedule:
+  #   - cron: "0 0 * * *"  # Runs daily at midnight UTC
+  workflow_dispatch:     # Allows manual triggering
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate GHAS CSV
+        uses: advanced-security/ghas-to-csv@v3
+        env:
+          GITHUB_PAT: ${{ secrets.GH_TOKEN }}  
+          GITHUB_REPORT_SCOPE: "organization"
+          SCOPE_NAME: "CanarysPlayground"    
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install Python dependencies
+        run: pip install requests
+
+      # Step 5: Send to Azure Sentinel (from previous example)
+      # - name: Send CSV to Azure Sentinel
+      #   env:
+      #     WORKSPACE_ID: ${{ secrets.WORKSPACE_ID }}
+      #     WORKSPACE_KEY: ${{ secrets.WORKSPACE_KEY }}
+      #   run: |
+      #     python - <<EOF
+      #     import csv
+      #     import json
+      #     import requests
+      #     import hmac
+      #     import hashlib
+      #     import base64
+          # from datetime import datetime
+
+          # workspace_id = "${{ secrets.WORKSPACE_ID }}"
+          # shared_key = "${{ secrets.WORKSPACE_KEY }}"
+          # log_type = "GHAS"
+          # csv_file = "path/to/your/ghas-report.csv"  # Update this
+
+          # with open(csv_file, 'r') as f:
+          #     csv_reader = csv.DictReader(f)
+          #     logs = [row for row in csv_reader]
+          # json_data = json.dumps(logs)
+
+          # def build_signature(workspace_id, shared_key, date, content_length):
+          #     string_to_hash = f"POST\n{content_length}\napplication/json\nx-ms-date:{date}\n/api/logs"
+          #     bytes_to_hash = string_to_hash.encode('utf-8')
+          #     decoded_key = base64.b64decode(shared_key)
+          #     hmac_sha256 = hmac.new(decoded_key, bytes_to_hash, hashlib.sha256).digest()
+          #     signature = base64.b64encode(hmac_sha256).decode('utf-8')
+          #     return f"SharedKey {workspace_id}:{signature}"
+
+          # rfc1123_date = datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+          # content_length = len(json_data)
+          # uri = f"https://{workspace_id}.ods.opinsights.azure.com/api/logs?api-version=2016-04-01"
+          # signature = build_signature(workspace_id, shared_key, rfc1123_date, content_length)
+          # headers = {
+          #     "Authorization": signature,
+          #     "Log-Type": log_type,
+          #     "x-ms-date": rfc1123_date,
+          #     "Content-Type": "application/json"
+          # }
+          # response = requests.post(uri, data=json_data, headers=headers)
+          # print(f"Sentinel response: {response.status_code}")
+          # EOF
+
+      # - name: Send CSV to Datadog
+      #   env:
+      #     DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+      #   run: |
+      #     python - <<EOF
+      #     import csv
+      #     import json
+      #     import requests
+
+      #     api_key = "${{ secrets.DATADOG_API_KEY }}"
+      #     endpoint = "https://http-intake.logs.datadoghq.com/api/v2/logs"  
+      #     csv_file = "path/to/your/ghas-report.csv" 
+
+      #     headers = {
+      #         "DD-API-KEY": api_key,
+      #         "Content-Type": "application/json"
+      #     }
+
+      #     with open(csv_file, 'r') as f:
+      #         csv_reader = csv.DictReader(f)
+      #         for row in csv_reader:
+      #             log_event = {
+      #                 "message": json.dumps(row),  # Serialize row as JSON string
+      #                 "service": "github-advanced-security",
+      #                 "source": "ghas",
+      #                 "tags": ["env:production", "org:your-org-name"]
+      #             }
+      #             response = requests.post(endpoint, data=json.dumps(log_event), headers=headers)
+      #             if response.status_code == 202:
+      #                 print(f"Sent log: {row}")
+      #             else:
+      #                 print(f"Failed: {response.status_code} - {response.text}")
+      #     EOF
+
+      # Step 6: Send to Datadog
+      - name: Send CSV to Datadog
+        env:
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+        run: |
+          python - <<EOF
+          import csv
+          import json
+          import requests
+          import glob
+      
+          api_key = "${{ secrets.DATADOG_API_KEY }}"
+          endpoint = "https://http-intake.logs.datadoghq.com/api/v2/logs"  #
+      
+          csv_files = glob.glob("*.csv")
+          if not csv_files:
+              print("Error: No CSV file found")
+              exit(1)
+          csv_file = csv_files[0]  
+          print(f"Using CSV file: {csv_file}")
+      
+          headers = {
+              "DD-API-KEY": api_key,
+              "Content-Type": "application/json"
+          }
+      
+          with open(csv_file, 'r') as f:
+              csv_reader = csv.DictReader(f)
+              for row in csv_reader:
+                  log_event = {
+                      "message": json.dumps(row),
+                      "service": "github-advanced-security",
+                      "source": "ghas",
+                      "tags": ["env:production", "org:CanarysPlayground"]
+                  }
+                  response = requests.post(endpoint, data=json.dumps(log_event), headers=headers)
+                  if response.status_code == 202:
+                      print(f"Sent log: {row}")
+                  else:
+                      print(f"Failed: {response.status_code} - {response.text}")
+          EOF
+
+      - name: Upload CSV Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghas-report
+          path: "*.csv"

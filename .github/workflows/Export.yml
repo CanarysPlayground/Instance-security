@@ -75,41 +75,7 @@ jobs:
           # print(f"Sentinel response: {response.status_code}")
           # EOF
 
-      # - name: Send CSV to Datadog
-      #   env:
-      #     DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
-      #   run: |
-      #     python - <<EOF
-      #     import csv
-      #     import json
-      #     import requests
-
-      #     api_key = "${{ secrets.DATADOG_API_KEY }}"
-      #     endpoint = "https://http-intake.logs.datadoghq.com/api/v2/logs"  
-      #     csv_file = "path/to/your/ghas-report.csv" 
-
-      #     headers = {
-      #         "DD-API-KEY": api_key,
-      #         "Content-Type": "application/json"
-      #     }
-
-      #     with open(csv_file, 'r') as f:
-      #         csv_reader = csv.DictReader(f)
-      #         for row in csv_reader:
-      #             log_event = {
-      #                 "message": json.dumps(row),  # Serialize row as JSON string
-      #                 "service": "github-advanced-security",
-      #                 "source": "ghas",
-      #                 "tags": ["env:production", "org:your-org-name"]
-      #             }
-      #             response = requests.post(endpoint, data=json.dumps(log_event), headers=headers)
-      #             if response.status_code == 202:
-      #                 print(f"Sent log: {row}")
-      #             else:
-      #                 print(f"Failed: {response.status_code} - {response.text}")
-      #     EOF
-
-      # # Step 6: Send to Datadog
+      #Working-Combined-Service
       # - name: Send CSV to Datadog
       #   env:
       #     DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
@@ -121,36 +87,37 @@ jobs:
       #     import glob
       
       #     api_key = "${{ secrets.DATADOG_API_KEY }}"
-      #     endpoint = "https://http-intake.logs.us5.datadoghq.com/api/v2/logs"  
+      #     endpoint = "https://http-intake.logs.us5.datadoghq.com/api/v2/logs" 
       
       #     csv_files = glob.glob("*.csv")
       #     if not csv_files:
-      #         print("Error: No CSV file found")
+      #         print("Error: No CSV files found")
       #         exit(1)
-      #     csv_file = csv_files[0]  
-      #     print(f"Using CSV file: {csv_file}")
       
       #     headers = {
       #         "DD-API-KEY": api_key,
       #         "Content-Type": "application/json"
       #     }
       
-      #     with open(csv_file, 'r') as f:
-      #         csv_reader = csv.DictReader(f)
-      #         for row in csv_reader:
-      #             log_event = {
-      #                 "message": json.dumps(row),
-      #                 "service": "github-advanced-security",
-      #                 "source": "ghas",
-      #                 "tags": ["env:production", "org:CanarysPlayground"]
-      #             }
-      #             response = requests.post(endpoint, data=json.dumps(log_event), headers=headers)
-      #             if response.status_code == 202:
-      #                 print(f"Sent log: {row}")
-      #             else:
-      #                 print(f"Failed: {response.status_code} - {response.text}")
+      #     for csv_file in csv_files:
+      #         print(f"Processing CSV file: {csv_file}")
+      #         with open(csv_file, 'r') as f:
+      #             csv_reader = csv.DictReader(f)
+      #             for row in csv_reader:
+      #                 log_event = {
+      #                     "message": json.dumps(row),
+      #                     "service": "github-advanced-security",
+      #                     "source": "ghas",
+      #                     "tags": ["env:production", "org:CanarysPlayground"]
+      #                 }
+      #                 response = requests.post(endpoint, data=json.dumps(log_event), headers=headers)
+      #                 if response.status_code == 202:
+      #                     print(f"Sent log from {csv_file}: {row}")
+      #                 else:
+      #                     print(f"Failed for {csv_file}: {response.status_code} - {response.text}")
       #     EOF
 
+##Multiple-Sevices
       - name: Send CSV to Datadog
         env:
           DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
@@ -162,7 +129,7 @@ jobs:
           import glob
       
           api_key = "${{ secrets.DATADOG_API_KEY }}"
-          endpoint = "https://http-intake.logs.us5.datadoghq.com/api/v2/logs" 
+          endpoint = "https://http-intake.logs.us5.datadoghq.com/api/v2/logs"
       
           csv_files = glob.glob("*.csv")
           if not csv_files:
@@ -176,12 +143,24 @@ jobs:
       
           for csv_file in csv_files:
               print(f"Processing CSV file: {csv_file}")
+              
+              # Determine the service based on the filename
+              if "cs_list" in csv_file.lower():
+                  service_name = "github-advanced-security-code-scanning"
+              elif "dependabot_list" in csv_file.lower():
+                  service_name = "github-advanced-security-dependabot"
+              elif "secrets_list" in csv_file.lower():
+                  service_name = "github-advanced-security-secret-scanning"
+              else:
+                  service_name = "github-advanced-security-unknown"
+                  print(f"Warning: Unknown report type for {csv_file}, using default service name")
+      
               with open(csv_file, 'r') as f:
                   csv_reader = csv.DictReader(f)
                   for row in csv_reader:
                       log_event = {
                           "message": json.dumps(row),
-                          "service": "github-advanced-security",
+                          "service": service_name,
                           "source": "ghas",
                           "tags": ["env:production", "org:CanarysPlayground"]
                       }

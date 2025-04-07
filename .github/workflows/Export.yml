@@ -45,7 +45,7 @@ jobs:
           # workspace_id = "${{ secrets.WORKSPACE_ID }}"
           # shared_key = "${{ secrets.WORKSPACE_KEY }}"
           # log_type = "GHAS"
-          # csv_file = "path/to/your/ghas-report.csv" 
+          # csv_file = "ghas-report.csv" 
 
           # with open(csv_file, 'r') as f:
           #     csv_reader = csv.DictReader(f)

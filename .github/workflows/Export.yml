@@ -121,7 +121,7 @@ jobs:
           import glob
       
           api_key = "${{ secrets.DATADOG_API_KEY }}"
-          endpoint = "https://http-intake.logs.datadoghq.com/api/v2/logs"  
+          endpoint = "https://http-intake.logs.us5.datadoghq.com/api/v2/logs"  
       
           csv_files = glob.glob("*.csv")
           if not csv_files:

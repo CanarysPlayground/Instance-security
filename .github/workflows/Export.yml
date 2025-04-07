@@ -129,6 +129,9 @@ jobs:
       
           api_key = "${{ secrets.DATADOG_API_KEY }}"
           endpoint = "https://http-intake.logs.us5.datadoghq.com/api/v2/logs"
+
+          #Run ID as a unique identifier for this run
+          run_id = "${{ github.run_id }}"
       
           csv_files = glob.glob("*.csv")
           if not csv_files:
@@ -160,7 +163,7 @@ jobs:
                           "message": json.dumps(row),
                           "service": service_name,
                           "source": "ghas",
-                          "tags": ["env:production", "org:CanarysPlayground"]
+                          "tags": ["env:production", "org:CanarysPlayground", f"run_id:{run_id}"]
                       }
                       response = requests.post(endpoint, data=json.dumps(log_event), headers=headers)
                       if response.status_code == 202:

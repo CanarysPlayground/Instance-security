@@ -2,14 +2,13 @@ name: Export GHAS to Azure Sentinel and Datadog
 
 on:
   # schedule:
-  #   - cron: "0 0 * * *"  # Runs daily at midnight UTC
-  workflow_dispatch:     # Allows manual triggering
+  #   - cron: "0 0 * * *" 
+  workflow_dispatch:     
 
 jobs:
   export:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -28,7 +27,7 @@ jobs:
       - name: Install Python dependencies
         run: pip install requests
 
-      # Step 5: Send to Azure Sentinel (from previous example)
+      ##Send to Azure Sentinel
       # - name: Send CSV to Azure Sentinel
       #   env:
       #     WORKSPACE_ID: ${{ secrets.WORKSPACE_ID }}
@@ -46,7 +45,7 @@ jobs:
           # workspace_id = "${{ secrets.WORKSPACE_ID }}"
           # shared_key = "${{ secrets.WORKSPACE_KEY }}"
           # log_type = "GHAS"
-          # csv_file = "path/to/your/ghas-report.csv"  # Update this
+          # csv_file = "path/to/your/ghas-report.csv" 
 
           # with open(csv_file, 'r') as f:
           #     csv_reader = csv.DictReader(f)
@@ -144,7 +143,6 @@ jobs:
           for csv_file in csv_files:
               print(f"Processing CSV file: {csv_file}")
               
-              # Determine the service based on the filename
               if "cs_list" in csv_file.lower():
                   service_name = "github-advanced-security-code-scanning"
               elif "dependabot_list" in csv_file.lower():

@@ -24,17 +24,23 @@ jobs:
         run: |
           pip install requests pandas
 
-      # Run OpenSSF Scorecard without signing
-      - name: Run Scorecard
+      # Run Scorecard manually
+      - name: Run Scorecard Manually
         id: scorecard
-        uses: ossf/scorecard-action@v2.3.1
+        run: |
+          # Install the Scorecard CLI
+          curl -LO https://github.com/ossf/scorecard/releases/download/v4.13.1/scorecard_4.13.1_linux_amd64
+          chmod +x scorecard_4.13.1_linux_amd64
+          mv scorecard_4.13.1_linux_amd64 scorecard
+
+          # Run Scorecard with signing disabled
+          ./scorecard --repo=github.com/${{ github.repository }} \
+            --format=json \
+            --show-details \
+            --output=./scorecard-results.json \
+            --skip-signing
         env:
-          SIGSTORE_ID_TOKEN: "" # Disables signing by providing an empty ID token
-        with:
-          results_format: json
-          results_file: './scorecard-results.json'
-          repo_token: ${{ secrets.GH_TOKEN }}
-          publish_results: true
+          GITHUB_AUTH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       # Debug: Verify the file exists
       - name: Verify Scorecard Output

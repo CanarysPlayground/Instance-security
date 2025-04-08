@@ -27,13 +27,14 @@ jobs:
       # Run OpenSSF Scorecard without signing
       - name: Run Scorecard
         id: scorecard
-        uses: ossf/scorecard-action@v2.4.0 # Update to a newer version
+        uses: ossf/scorecard-action@v2.3.1
+        env:
+          SIGSTORE_ID_TOKEN: "" # Disables signing by providing an empty ID token
         with:
           results_format: json
           results_file: './scorecard-results.json'
           repo_token: ${{ secrets.GH_TOKEN }}
           publish_results: true
-          sign_results: false # Now properly recognized
 
       # Debug: Verify the file exists
       - name: Verify Scorecard Output

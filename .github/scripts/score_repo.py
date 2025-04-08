@@ -81,12 +81,26 @@ def collect_metadata():
     }
 
 # Step 2: Parse Scorecard Results
+# def get_scorecard_score():
+#     with open("scorecard-results.json", "r") as f:
+#         scorecard_data = json.load(f)
+#     checks = scorecard_data.get("checks", [])
+#     avg_score = sum(check["score"] for check in checks if check["score"] >= 0) / len(checks) if checks else 0
+#     return avg_score
+
 def get_scorecard_score():
-    with open("scorecard-results.json", "r") as f:
-        scorecard_data = json.load(f)
-    checks = scorecard_data.get("checks", [])
-    avg_score = sum(check["score"] for check in checks if check["score"] >= 0) / len(checks) if checks else 0
-    return avg_score
+    try:
+        with open("scorecard-results.json", "r") as f:
+            scorecard_data = json.load(f)
+        checks = scorecard_data.get("checks", [])
+        avg_score = sum(check["score"] for check in checks if check["score"] >= 0) / len(checks) if checks else 0
+        return avg_score
+    except FileNotFoundError:
+        print("Error: scorecard-results.json not found!")
+        return 0  # Default to 0 if file is missing
+    except json.JSONDecodeError:
+        print("Error: Invalid JSON in scorecard-results.json!")
+        return 0
 
 # Step 3: Calculate Risk Score
 def calculate_risk_score(metadata, scorecard_score):

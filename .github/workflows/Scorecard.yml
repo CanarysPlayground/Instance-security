@@ -29,9 +29,14 @@ jobs:
         id: scorecard
         run: |
           # Install the Scorecard CLI
-          curl -LO https://github.com/ossf/scorecard/releases/download/v4.13.1/scorecard_4.13.1_linux_amd64
-          chmod +x scorecard_4.13.1_linux_amd64
-          mv scorecard_4.13.1_linux_amd64 scorecard
+          curl -LO https://github.com/ossf/scorecard/releases/download/v4.13.1/scorecard-v4.13.1-linux-amd64
+          # Verify the file size (should be ~20-30 MB)
+          ls -lh scorecard-v4.13.1-linux-amd64
+          chmod +x scorecard-v4.13.1-linux-amd64
+          mv scorecard-v4.13.1-linux-amd64 scorecard
+          # Verify the binary
+          file scorecard
+          ./scorecard --version
 
           # Run Scorecard with signing disabled
           ./scorecard --repo=github.com/${{ github.repository }} \

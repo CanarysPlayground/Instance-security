@@ -3,7 +3,7 @@ name: Governance Scorecard
 on:
   # schedule:
   #   - cron: '0 0 * * 1' # Runs every Monday at midnight UTC
-  workflow_dispatch: # Allows manual triggering
+  workflow_dispatch: 
 
 jobs:
   collect-and-score:
@@ -24,21 +24,28 @@ jobs:
         run: |
           pip install requests pandas
 
-      # Run OpenSSF Scorecard
+      # Run OpenSSF Scorecard without signing
       - name: Run Scorecard
         id: scorecard
         uses: ossf/scorecard-action@v2.3.1
         with:
           results_format: json
-          results_file: 'scorecard-results.json' # Explicitly name the output file
+          results_file: './scorecard-results.json'
           repo_token: ${{ secrets.GH_TOKEN }}
           publish_results: true
+          sign_results: false # Disable signing to avoid Fulcio errors
 
-      # Debug: Check if the results file exists
+      # Debug: Verify the file exists
       - name: Verify Scorecard Output
         run: |
           ls -la
-          cat scorecard-results.json || echo "Scorecard results file not found!"
+          if [ -f "./scorecard-results.json" ]; then
+            echo "Scorecard results file found:"
+            cat ./scorecard-results.json
+          else
+            echo "Error: scorecard-results.json not found!"
+            exit 1
+          fi
 
       # Collect metadata and score the repo
       - name: Collect Metadata and Calculate Score
@@ -51,7 +58,8 @@ jobs:
 
       # Upload results as artifact (optional, for debugging)
       - name: Upload Scorecard Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: scorecard-results
-          path: scorecard-results.json
+          path: ./scorecard-results.json

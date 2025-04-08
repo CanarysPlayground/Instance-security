@@ -12,7 +12,7 @@ API_BASE = "https://api.github.com"
 
 # Datadog API setup
 DATADOG_API_KEY = os.getenv("DATADOG_API_KEY")
-DATADOG_API_URL = "https://api.datadoghq.com/api/v1/series"
+DATADOG_API_URL = "https://api.us5.datadoghq.com/api/v1/series"
 
 # Helper function to query GitHub API
 def github_api_request(endpoint):

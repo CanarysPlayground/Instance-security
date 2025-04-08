@@ -3,7 +3,7 @@ name: Governance Scorecard
 on:
   # schedule:
   #   - cron: '0 0 * * 1' # Runs every Monday at midnight UTC
-  workflow_dispatch: 
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
   collect-and-score:
@@ -30,8 +30,15 @@ jobs:
         uses: ossf/scorecard-action@v2.3.1
         with:
           results_format: json
+          results_file: 'scorecard-results.json' # Explicitly name the output file
           repo_token: ${{ secrets.GH_TOKEN }}
           publish_results: true
+
+      # Debug: Check if the results file exists
+      - name: Verify Scorecard Output
+        run: |
+          ls -la
+          cat scorecard-results.json || echo "Scorecard results file not found!"
 
       # Collect metadata and score the repo
       - name: Collect Metadata and Calculate Score

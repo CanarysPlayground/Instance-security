@@ -1,0 +1,50 @@
+name: Governance Scorecard
+
+on:
+  # schedule:
+  #   - cron: '0 0 * * 1' # Runs every Monday at midnight UTC
+  workflow_dispatch: 
+
+jobs:
+  collect-and-score:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: |
+          pip install requests pandas
+
+      # Run OpenSSF Scorecard
+      - name: Run Scorecard
+        id: scorecard
+        uses: ossf/scorecard-action@v2.3.1
+        with:
+          results_format: json
+          repo_token: ${{ secrets.GH_TOKEN }}
+          publish_results: true
+
+      # Collect metadata and score the repo
+      - name: Collect Metadata and Calculate Score
+        id: scoring
+        run: python .github/scripts/score_repo.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          REPO_NAME: ${{ github.repository }}
+
+      # Upload results as artifact (optional, for debugging)
+      - name: Upload Scorecard Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: scorecard-results
+          path: scorecard-results.json

@@ -279,23 +279,30 @@ def setup_templates():
 
     body {
       margin: 0;
-      padding: 0;
+      padding: 60px 0;
       font-family: 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(to right, #e0f2fe, #f3e8ff);
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      align-items: center;
       position: relative;
-      overflow: hidden;
+      overflow-x: hidden;
+    }
+
+    main {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      position: relative;
     }
 
     .bubble {
       position: absolute;
       bottom: -100px;
       border-radius: 50%;
-      opacity: 0.4;
+      opacity: 0.3;
       animation: rise 20s infinite ease-in;
+      z-index: 1;
     }
 
     .bubble:nth-child(1) {
@@ -341,13 +348,14 @@ def setup_templates():
 
     .card {
       position: relative;
+      z-index: 10;
       background-color: var(--surface);
       border-radius: 20px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
       padding: 40px;
       max-width: 640px;
       width: 100%;
-      z-index: 10;
+      margin: 20px;
     }
 
     h1 {
@@ -450,28 +458,31 @@ def setup_templates():
   </style>
 </head>
 <body>
-  <!-- Background bubbles -->
-  <div class="bubble"></div>
-  <div class="bubble"></div>
-  <div class="bubble"></div>
-  <div class="bubble"></div>
+  <main>
+    <!-- Animated bubbles -->
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
 
-  <div class="card">
-    <h1>GitHub Workshop Orchestrator</h1>
-    <p>Create personalized GitHub Organizations with template repositories for your team or learners.</p>
+    <!-- UI Card -->
+    <div class="card">
+      <h1>GitHub Workshop Orchestrator</h1>
+      <p>Create personalized GitHub Organizations with template repositories for your team or learners.</p>
 
-    <label for="emails">Participant Email Addresses</label>
-    <textarea id="emails" placeholder="Enter email addresses, one per line"></textarea>
+      <label for="emails">Participant Email Addresses</label>
+      <textarea id="emails" placeholder="Enter email addresses, one per line"></textarea>
 
-    <button id="createBtn">Create Workshop Environments</button>
+      <button id="createBtn">Create Workshop Environments</button>
 
-    <div class="loading" id="loading">⏳ Creating... Please wait.</div>
-    <div id="result"></div>
+      <div class="loading" id="loading">⏳ Creating... Please wait.</div>
+      <div id="result"></div>
 
-    <footer>
-      &copy; 2025 GitHub Workshop UI • Designed for Developers
-    </footer>
-  </div>
+      <footer>
+        &copy; 2025 GitHub Workshop • Canarys Automations
+      </footer>
+    </div>
+  </main>
 
   <script>
     document.getElementById('createBtn').addEventListener('click', async function () {

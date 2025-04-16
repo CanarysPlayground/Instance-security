@@ -10,7 +10,7 @@ import string
 import json
 from flask import Flask, request, render_template, jsonify
 
-# --- Config ---
+# --- Config --
 # IMPORTANT: Set these values directly for now, later move to environment variables
 GITHUB_TOKEN = ""  # Replace with your new token
 ENTERPRISE_ID = "E_kgDOAATOow"  # Your enterprise ID

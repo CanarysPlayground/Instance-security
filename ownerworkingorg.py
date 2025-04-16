@@ -259,151 +259,277 @@ def setup_templates():
     os.makedirs('templates', exist_ok=True)
     
     html_content = """<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>GitHub Workshop Orchestrator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1 {
-            color: #24292e;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        textarea {
-            width: 100%;
-            height: 150px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-        }
-        button {
-            background-color: #2ea44f;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        button:hover {
-            background-color: #2c974b;
-        }
-        #result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 3px;
-            display: none;
-        }
-        .success {
-            background-color: #f0fff4;
-            border: 1px solid #dcffe4;
-        }
-        .error {
-            background-color: #fff5f5;
-            border: 1px solid #fed7d7;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-        }
-        .repo-result {
-            margin-left: 20px;
-            font-size: 14px;
-            color: #666;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>GitHub Workshop Orchestrator</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --background: #f9fafb;
+      --foreground: #111827;
+      --muted: #6b7280;
+      --surface: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(to right, #e0f2fe, #f3e8ff);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bubble {
+      position: absolute;
+      bottom: -100px;
+      border-radius: 50%;
+      opacity: 0.4;
+      animation: rise 20s infinite ease-in;
+    }
+
+    .bubble:nth-child(1) {
+      width: 80px;
+      height: 80px;
+      left: 20%;
+      background-color: #c4b5fd;
+      animation-duration: 25s;
+    }
+
+    .bubble:nth-child(2) {
+      width: 100px;
+      height: 100px;
+      left: 40%;
+      background-color: #a5b4fc;
+      animation-duration: 18s;
+    }
+
+    .bubble:nth-child(3) {
+      width: 60px;
+      height: 60px;
+      left: 65%;
+      background-color: #93c5fd;
+      animation-duration: 22s;
+    }
+
+    .bubble:nth-child(4) {
+      width: 50px;
+      height: 50px;
+      left: 80%;
+      background-color: #bfdbfe;
+      animation-duration: 26s;
+    }
+
+    @keyframes rise {
+      0% {
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        transform: translateY(-120vh) scale(1.2);
+      }
+    }
+
+    .card {
+      position: relative;
+      background-color: var(--surface);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      padding: 40px;
+      max-width: 640px;
+      width: 100%;
+      z-index: 10;
+    }
+
+    h1 {
+      font-size: 30px;
+      margin-bottom: 8px;
+      color: var(--foreground);
+    }
+
+    p {
+      margin-top: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    label {
+      display: block;
+      margin-top: 30px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--foreground);
+    }
+
+    textarea {
+      width: 100%;
+      height: 140px;
+      padding: 14px;
+      margin-top: 10px;
+      font-size: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      background-color: #f3f4f6;
+      transition: border-color 0.2s ease;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      background-color: #fff;
+    }
+
+    button {
+      margin-top: 30px;
+      padding: 14px 28px;
+      background: linear-gradient(to right, #6366f1, #8b5cf6);
+      border: none;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .loading {
+      display: none;
+      margin-top: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    #result {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .success {
+      background-color: #ecfdf5;
+      border: 1px solid #10b981;
+      color: #065f46;
+    }
+
+    .error {
+      background-color: #fef2f2;
+      border: 1px solid #ef4444;
+      color: #991b1b;
+    }
+
+    .repo-result {
+      margin-left: 20px;
+      color: #4b5563;
+      font-size: 14px;
+    }
+
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+  </style>
 </head>
 <body>
+  <!-- Background bubbles -->
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+  <div class="bubble"></div>
+
+  <div class="card">
     <h1>GitHub Workshop Orchestrator</h1>
-    <p>Enter participant email addresses (one per line) to create a GitHub organization for each participant.</p>
-    
-    <div class="form-group">
-        <label for="emails">Participant Email Addresses:</label>
-        <textarea id="emails" placeholder="Enter email addresses, one per line"></textarea>
-    </div>
-    
+    <p>Create personalized GitHub Organizations with template repositories for your team or learners.</p>
+
+    <label for="emails">Participant Email Addresses</label>
+    <textarea id="emails" placeholder="Enter email addresses, one per line"></textarea>
+
     <button id="createBtn">Create Workshop Environments</button>
-    
-    <div class="loading" id="loading">
-        <p>Creating organizations and repositories... This may take a few minutes.</p>
-    </div>
-    
+
+    <div class="loading" id="loading">⏳ Creating... Please wait.</div>
     <div id="result"></div>
-    
-    <script>
-        document.getElementById('createBtn').addEventListener('click', async function() {
-            const emailsText = document.getElementById('emails').value.trim();
-            if (!emailsText) {
-                alert('Please enter at least one email address');
-                return;
-            }
-            
-            const emails = emailsText.split('\\n').map(email => email.trim()).filter(email => email);
-            
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('result').style.display = 'none';
-            
-            try {
-                const response = await fetch('/create_workshop', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ emails })
-                });
-                
-                const data = await response.json();
-                
-                document.getElementById('loading').style.display = 'none';
-                const resultDiv = document.getElementById('result');
-                resultDiv.style.display = 'block';
-                
-                if (data.success) {
-                    resultDiv.className = 'success';
-                    let html = '<h3>Results:</h3>';
-                    
-                    data.results.forEach(result => {
-                        if (result.success) {
-                            html += `<p>&#x2705; <strong>${result.email}</strong>: ${result.message}</p>`;
-                            
-                            if (result.repo_results && result.repo_results.length > 0) {
-                                html += '<div class="repo-result">';
-                                result.repo_results.forEach(repoResult => {
-                                    html += `<p>${repoResult}</p>`;
-                                });
-                                html += '</div>';
-                            }
-                        } else {
-                            html += `<p>&#x274C; <strong>${result.email}</strong>: ${result.message}</p>`;
-                        }
-                    });
-                    
-                    resultDiv.innerHTML = html;
-                } else {
-                    resultDiv.className = 'error';
-                    resultDiv.innerHTML = `<p>Error: ${data.message}</p>`;
-                }
-            } catch (error) {
-                document.getElementById('loading').style.display = 'none';
-                const resultDiv = document.getElementById('result');
-                resultDiv.style.display = 'block';
-                resultDiv.className = 'error';
-                resultDiv.innerHTML = `<p>Error: ${error.message}</p>`;
-            }
+
+    <footer>
+      &copy; 2025 GitHub Workshop UI • Designed for Developers
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('createBtn').addEventListener('click', async function () {
+      const emailsText = document.getElementById('emails').value.trim();
+      if (!emailsText) {
+        alert('Please enter at least one email address');
+        return;
+      }
+
+      const emails = emailsText.split('\\n').map(email => email.trim()).filter(email => email);
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('result').style.display = 'none';
+
+      try {
+        const response = await fetch('/create_workshop', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ emails })
         });
-    </script>
+
+        const data = await response.json();
+        document.getElementById('loading').style.display = 'none';
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+
+        if (data.success) {
+          resultDiv.className = 'success';
+          let html = '<h3>Results:</h3>';
+          data.results.forEach(result => {
+            if (result.success) {
+              html += `<p><strong>${result.email}</strong>: ${result.message}</p>`;
+              if (result.repo_results && result.repo_results.length > 0) {
+                html += '<div class="repo-result">';
+                result.repo_results.forEach(repoResult => {
+                  html += `<p>${repoResult}</p>`;
+                });
+                html += '</div>';
+              }
+            } else {
+              html += `<p><strong>${result.email}</strong>: ${result.message}</p>`;
+            }
+          });
+          resultDiv.innerHTML = html;
+        } else {
+          resultDiv.className = 'error';
+          resultDiv.innerHTML = `<p>Error: ${data.message}</p>`;
+        }
+      } catch (error) {
+        document.getElementById('loading').style.display = 'none';
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'error';
+        resultDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+      }
+    });
+  </script>
 </body>
 </html>"""
     

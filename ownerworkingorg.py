@@ -11,7 +11,7 @@ from flask import Flask, request, render_template, jsonify
 
 # --- Config ---
 # IMPORTANT: Set these values directly for now, later move to environment variables
-GITHUB_TOKEN = "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"  # Replace with your new token
+GITHUB_TOKEN = ""  # Replace with your new token
 ENTERPRISE_ID = "MDEwOkVudGVycHJpc2UzMTEy"  # Your enterprise ID
 SOURCE_ORG = "Instance-test-org"  # Your template/golden source org
 REPOS_TO_CLONE = ["Java-Repo01","ghas-enablement"]  # Add more repos as needed
@@ -59,12 +59,23 @@ def get_github_username_from_email(email):
         return result['data']['search']['edges'][0]['node']['login']
     return None
 
-def generate_unique_org_name(prefix="GH-Org"):
-    """Generate a unique organization name"""
-    # Get timestamp and random string
-    timestamp = int(time.time())
+# def generate_unique_org_name(prefix="GH-Org"):
+#     """Generate a unique organization name"""
+#     # Get timestamp and random string
+#     timestamp = int(time.time())
+#     random_str = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
+#     return f"{prefix}-{timestamp}-{random_str}"
+
+def generate_unique_org_name(email, prefix="GH-Canarys"):
+    """Generate a unique organization name using email's first part"""
+    # Extract firstname from email before the @ symbol
+    firstname = email.split("@")[0].split(".")[0].capitalize()
+    
+    # Get timestamp or short random string
     random_str = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
-    return f"{prefix}-{timestamp}-{random_str}"
+    
+    return f"{prefix}-{firstname}-{random_str}"
+
 
 def create_organization(email, org_login=None):
     """Create a new GitHub organization and make the user an owner"""
@@ -73,7 +84,7 @@ def create_organization(email, org_login=None):
     
     # Generate unique org name if not provided
     if not org_login:
-        org_login = generate_unique_org_name()
+        org_login = generate_unique_org_name(email)
     
     org_name = org_login.replace("-", " ")
     

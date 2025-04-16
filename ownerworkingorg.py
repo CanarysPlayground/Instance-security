@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import stat
 import requests
 import os
 import time
@@ -12,8 +13,8 @@ from flask import Flask, request, render_template, jsonify
 # --- Config ---
 # IMPORTANT: Set these values directly for now, later move to environment variables
 GITHUB_TOKEN = ""  # Replace with your new token
-ENTERPRISE_ID = "MDEwOkVudGVycHJpc2UzMTEy"  # Your enterprise ID
-SOURCE_ORG = "Instance-test-org"  # Your template/golden source org
+ENTERPRISE_ID = "E_kgDOAATOow"  # Your enterprise ID
+SOURCE_ORG = "Instance-test-org01"  # Your template/golden source org
 REPOS_TO_CLONE = ["Java-Repo01","ghas-enablement"]  # Add more repos as needed
 
 # --- Headers ---
@@ -199,7 +200,7 @@ def clone_repositories(org_login):
             # Cleanup with permission fix (for Windows)
             try:
                 def force_remove_readonly(func, path, _):
-                    os.chmod(path, os.stat.S_IWRITE)
+                    os.chmod(path, stat.S_IWRITE)
                     func(path)
                 
                 shutil.rmtree(repo_dir, onerror=force_remove_readonly)

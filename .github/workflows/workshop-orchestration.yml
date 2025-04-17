@@ -1,0 +1,42 @@
+name: Workshop Orchestration
+
+on:
+  workflow_dispatch:
+    inputs:
+      emails:
+        description: 'Comma-separated list of participant email addresses'
+        required: true
+      repos:
+        description: 'List of repositories to clone from source org'
+        required: true
+        default: 'Java-Repo01,ghas-enablement-Internal'
+
+jobs:
+  orchestrate-workshop:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run workshop orchestrator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          ENTERPRISE_ID: ${{ secrets.ENTERPRISE_ID_SECRET }}
+        run: |
+          python workshop_orchestrator.py \
+            --emails "${{ github.event.inputs.emails }}" \
+            --repos "${{ github.event.inputs.repos }}" \
+            --token "$GITHUB_TOKEN" \
+            --enterprise-id "$ENTERPRISE_ID" \
+            --source-org "Instance-test-org01"

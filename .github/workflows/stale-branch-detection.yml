@@ -70,8 +70,8 @@ jobs:
                   protected_skipped.append(branch_name)
                   continue
               
-              # Get the latest commit on this branch
-              commits = list(repo.get_commits(sha=branch_name, per_page=1))
+              # Get the latest commit on this branch - fix for the per_page parameter
+              commits = list(repo.get_commits(sha=branch_name))[:1]  # Get first commit only
               if not commits:
                   continue
                   
@@ -147,8 +147,6 @@ jobs:
                   if len(stale_branches) > 15:
                       stale_list += f"\n- ... and {len(stale_branches) - 15} more"
                   
-                  # GitHub Actions has limits on output size, so we encode this properly
-                  stale_list_safe = stale_list.replace('%', '%25').replace('\n', '%0A').replace('\r', '%0D')
                   f.write(f"stale-list<<EOF\n{stale_list}\nEOF\n")
           EOF
           

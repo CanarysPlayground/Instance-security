@@ -1,0 +1,201 @@
+name: Stale Branch Detection (15+ Days)
+
+on:
+  # Run weekly on Monday at 9:00 AM
+  schedule:
+    - cron: '0 9 * * 1'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  detect-stale-branches:
+    name: Detect Inactive Branches (15+ Days)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for all branches
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: pip install PyGithub python-dateutil
+      
+      - name: Detect stale branches
+        id: stale-branches
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          cat > detect_stale_branches.py << 'EOF'
+          import os
+          import sys
+          import datetime
+          from dateutil.parser import parse
+          from dateutil.relativedelta import relativedelta
+          from github import Github
+
+          # Constants
+          STALE_THRESHOLD_DAYS = 15  # Mark as stale after 15 days
+          PROTECTED_BRANCHES = ['main', 'master', 'develop', 'staging', 'production', 'release']
+          
+          # Get environment variables
+          github_token = os.environ.get('GITHUB_TOKEN')
+          repo_name = os.environ.get('REPO_NAME')
+          
+          # Initialize GitHub client
+          g = Github(github_token)
+          repo = g.get_repo(repo_name)
+          
+          now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+          stale_date = now - relativedelta(days=STALE_THRESHOLD_DAYS)
+          
+          # Results tracking
+          stale_branches = []
+          protected_skipped = []
+          active_branches = []
+          
+          # Process all branches
+          for branch in repo.get_branches():
+              branch_name = branch.name
+              
+              # Skip protected branches
+              if branch_name in PROTECTED_BRANCHES or branch.protected:
+                  protected_skipped.append(branch_name)
+                  continue
+              
+              # Get the latest commit on this branch
+              commits = list(repo.get_commits(sha=branch_name, per_page=1))
+              if not commits:
+                  continue
+                  
+              latest_commit = commits[0]
+              commit_date = parse(latest_commit.last_modified)
+              
+              # Check if branch is inactive
+              days_since_update = (now - commit_date).days
+              
+              if commit_date < stale_date:
+                  stale_branches.append((branch_name, days_since_update, latest_commit.html_url))
+              else:
+                  active_branches.append((branch_name, days_since_update))
+          
+          # Sort stale branches by inactivity (most inactive first)
+          stale_branches.sort(key=lambda x: x[1], reverse=True)
+          
+          # Process stale branches - create issues
+          print("\n## Stale Branches (Inactive for 15+ days)")
+          print("| Branch | Days Inactive | Last Commit |")
+          print("|--------|---------------|-------------|")
+          
+          for branch_name, days, commit_url in stale_branches:
+              print(f"| {branch_name} | {days} | [View]({commit_url}) |")
+              
+              # Check if we already have an open issue for this branch
+              existing_issues = list(repo.get_issues(state='open', labels=['stale-branch', branch_name]))
+              
+              if not existing_issues:
+                  # Create issue for stale branch
+                  issue_title = f"Stale Branch: {branch_name}"
+                  issue_body = f"""
+          ## Stale Branch Detected
+          
+          The branch `{branch_name}` has been inactive for {days} days.
+          
+          ### Actions to consider:
+          - Update this branch if it's still needed
+          - Close this issue if the branch is intentionally dormant
+          - Consider archiving if no longer required
+          
+          Last commit: {commit_url}
+          """
+                  issue = repo.create_issue(
+                      title=issue_title,
+                      body=issue_body,
+                      labels=['stale-branch', branch_name]
+                  )
+                  print(f"Created issue #{issue.number}")
+          
+          # Summary stats
+          longest_inactive = max([days for _, days, _ in stale_branches], default=0)
+          avg_inactive = sum([days for _, days, _ in stale_branches]) / len(stale_branches) if stale_branches else 0
+          
+          # Summary
+          print("\n## Summary")
+          print(f"Active branches: {len(active_branches)}")
+          print(f"Protected/Skipped branches: {len(protected_skipped)}")
+          print(f"Stale branches (15+ days): {len(stale_branches)}")
+          print(f"Longest inactive: {longest_inactive} days")
+          print(f"Average inactivity: {avg_inactive:.1f} days")
+          
+          # Set GitHub Actions outputs
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"stale-count={len(stale_branches)}\n")
+              f.write(f"active-count={len(active_branches)}\n")
+              f.write(f"longest-inactive={longest_inactive}\n")
+              f.write(f"avg-inactive={avg_inactive:.1f}\n")
+              
+              # Create a comma-separated list of stale branches for the summary
+              if stale_branches:
+                  stale_list = "\n".join([f"- `{b[0]}` ({b[1]} days)" for b in stale_branches[:15]])
+                  if len(stale_branches) > 15:
+                      stale_list += f"\n- ... and {len(stale_branches) - 15} more"
+                  
+                  # GitHub Actions has limits on output size, so we encode this properly
+                  stale_list_safe = stale_list.replace('%', '%25').replace('\n', '%0A').replace('\r', '%0D')
+                  f.write(f"stale-list<<EOF\n{stale_list}\nEOF\n")
+          EOF
+          
+          # Run the Python script
+          python detect_stale_branches.py
+      
+      - name: Create summary report
+        if: always()
+        run: |
+          echo "# Stale Branch Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Executed on: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Active branches: ${{ steps.stale-branches.outputs.active-count || '0' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Stale branches (15+ days inactive): ${{ steps.stale-branches.outputs.stale-count || '0' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Longest inactive: ${{ steps.stale-branches.outputs.longest-inactive || '0' }} days" >> $GITHUB_STEP_SUMMARY
+          echo "- Average inactivity: ${{ steps.stale-branches.outputs.avg-inactive || '0' }} days" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.stale-branches.outputs.stale-count }}" != "0" && "${{ steps.stale-branches.outputs.stale-count }}" != "" ]]; then
+            echo "### Stale Branches" >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.stale-branches.outputs.stale-list }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Issues have been created for each stale branch" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No stale branches detected!" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Update PR with comment if triggered by PR
+        if: github.event_name == 'pull_request' && steps.stale-branches.outputs.stale-count != '0'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const staleCount = '${{ steps.stale-branches.outputs.stale-count }}';
+            const staleList = `${{ steps.stale-branches.outputs.stale-list }}`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🔍 Stale Branch Check
+
+              This repository has **${staleCount}** stale branches (inactive for 15+ days):
+
+              ${staleList}
+
+              Please consider updating or archiving these branches.`
+            });

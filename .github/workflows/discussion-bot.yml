@@ -22,7 +22,7 @@ jobs:
 
       - name: Post reply using GitHub CLI
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           gh api repos/${{ github.repository }}/discussions/${{ github.event.discussion_comment.discussion_id }}/comments \
             -f body="${{ steps.response.outputs.response }}"

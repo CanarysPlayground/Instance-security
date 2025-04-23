@@ -23,14 +23,17 @@ jobs:
           RANDOM_INDEX=$((RANDOM % ${#RESPONSES[@]}))
           echo "response=${RESPONSES[$RANDOM_INDEX]}" >> $GITHUB_OUTPUT
 
-      - name: Get discussion ID
+      - name: Extract and debug discussion ID
         id: extract
         run: |
+          echo "Extracting discussion ID..."
           echo "discussion_id=${{ github.event.discussion_comment.discussion_id }}" >> $GITHUB_OUTPUT
+          echo "📌 Discussion ID: ${{ github.event.discussion_comment.discussion_id }}"
 
       - name: Post reply using GitHub CLI
         env:
           GH_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
+          echo "Posting to: repos/${{ github.repository }}/discussions/${{ steps.extract.outputs.discussion_id }}/comments"
           gh api repos/${{ github.repository }}/discussions/${{ steps.extract.outputs.discussion_id }}/comments \
             -f body="${{ steps.response.outputs.response }}"

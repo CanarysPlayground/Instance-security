@@ -178,7 +178,7 @@ jobs:
       
       - name: Update PR with comment if triggered by PR
         if: github.event_name == 'pull_request' && steps.stale-branches.outputs.stale-count != '0'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

@@ -60,3 +60,16 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+
+  # ========================================================
+  # BLOCK 2: SCAN "DEV" (Development)
+  # ========================================================
+  - package-ecosystem: "maven"
+    directory: "/"
+    target-branch: "dev"         
+    schedule:
+      interval: "daily"           
+    groups:
+      development-deps:
+        patterns:
+          - "*"
